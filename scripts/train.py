@@ -10,8 +10,8 @@ from stable_baselines3.common.monitor import Monitor
 from dog_walking.utils.tensorboard_callback import TensorboardCallback
 
 # Create directories to hold models and logs
-model_dir = "../models/models30"
-log_dir = "../logs/training_logs/logs30"
+model_dir = "../models/models31"
+log_dir = "../logs/training_logs/logs31"
 os.makedirs(model_dir, exist_ok=True)
 os.makedirs(log_dir, exist_ok=True)
 
