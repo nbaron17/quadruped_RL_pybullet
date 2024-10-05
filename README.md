@@ -99,7 +99,7 @@ Contributions are welcome! If you'd like to contribute to the project, please fo
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for more details.
 
 
 ---
