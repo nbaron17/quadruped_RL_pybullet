@@ -23,9 +23,9 @@
     <inertial>
       <origin xyz="0.018 , 2.287E-04 , 0.01"/>
       <mass value="1.248" />
-      <inertia ixx="0.002" ixy="7.984E-08" ixz="-2.045E-04"
-                              iyy="0.007" iyz="-2.383E-06"
-                                              izz="0.007" />
+      <inertia ixx="0.02" ixy="7.984E-08" ixz="-2.045E-04"
+                              iyy="0.07" iyz="-2.383E-06"
+                                              izz="0.07" />
     </inertial>
     <visual>
       <origin rpy="1.57 0 -1.57"/>
@@ -46,7 +46,7 @@
     </geometry>
   </collision>
     <inertial>
-      <mass value="0.075" />
+      <mass value="0.3" />
       <inertia ixx="3.724E-05" ixy="9.731E-06"  ixz="0"
                                 iyy="2.829E-05" iyz="0"
                                                  izz="5.581E-05" />
@@ -69,7 +69,7 @@
       <material name="white"/>
     </collision>
     <inertial>
-      <mass value="0.084" />
+      <mass value="0.3" />
       <inertia ixx="7.552E-05" ixy="-3.399E-08"  ixz="9.599E-08"
                                 iyy="6.041E-05" iyz="-1.244E-06"
                                                  izz="2.256E-05" />
@@ -92,7 +92,7 @@
       <material name="blue"/>
     </collision>
     <inertial>
-      <mass value="0.034" />
+      <mass value="0.15" />
       <inertia ixx="3.218E-05" ixy="0.00" ixz="-4.239E-09"
                                iyy="3.195E-05"  iyz="0.00"
                                                izz="1.847E-06" />
@@ -113,7 +113,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.0044" />
+      <mass value="0.15" />
       <inertia ixx="7.04E-7" ixy="0.00" ixz="0.00"
                                  iyy="7.04E-7"  iyz="0.00"
                                                  izz="7.04E-7" />
@@ -171,7 +171,7 @@
       <material name="red"/>
     </collision>
     <inertial>
-      <mass value="0.075" />
+      <mass value="0.3" />
       <inertia ixx="3.724E-05" ixy="-9.731E-06"  ixz="0"
                                 iyy="2.829E-05" iyz="0"
                                                  izz="5.581E-05" />
@@ -194,7 +194,7 @@
       <material name="white"/>
     </collision>
     <inertial>
-      <mass value="0.084" />
+      <mass value="0.3" />
       <inertia ixx="7.552E-05" ixy="3.399E-08"  ixz="9.599E-08"
                                 iyy="6.041E-05" iyz="1.244E-06"
                                                  izz="2.256E-05" />
@@ -217,7 +217,7 @@
       <material name="blue"/>
     </collision>
     <inertial>
-      <mass value="0.034" />
+      <mass value="0.15" />
       <inertia ixx="3.218E-05" ixy="0.00" ixz="-4.791E-09"
                                iyy="3.195E-05"  iyz="0.00"
                                                izz="1.847E-06" />
@@ -238,7 +238,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.0044" />
+      <mass value="0.15" />
       <inertia ixx="7.04E-7" ixy="0.00" ixz="0.00"
                                  iyy="7.04E-7"  iyz="0.00"
                                                  izz="7.04E-7" />
@@ -301,7 +301,7 @@
       <material name="red"/>
     </collision>
     <inertial>
-      <mass value="0.09" />
+      <mass value="0.2" />
       <origin xyz="0.0973055 -0.0661692 -0.00513185"/>
       <inertia ixx="4.690E-05" ixy="3.095E-06"  ixz="0.00"
                                 iyy="2.886E-05" iyz="0.00"
@@ -325,7 +325,7 @@
       <material name="white"/>
     </collision>
     <inertial>
-      <mass value="0.085" />
+      <mass value="0.3" />
       <inertia ixx="7.605E-05" ixy="0.00"  ixz="0.00"
                                 iyy="6.090E-05" iyz="-1.120E-06"
                                                  izz="2.264E-05" />
@@ -348,7 +348,7 @@
       <material name="blue"/>
     </collision>
     <inertial>
-      <mass value="0.034" />
+      <mass value="0.15" />
       <inertia ixx="3.218E-05" ixy="0.00" ixz="-4.239E-09"
                                iyy="3.195E-05"  iyz="0.00"
                                                izz="1.847E-06" />
@@ -369,7 +369,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.0044" />
+      <mass value="0.15" />
       <inertia ixx="7.04E-7" ixy="0.00" ixz="0.00"
                                  iyy="7.04E-7"  iyz="0.00"
                                                  izz="7.04E-7" />
@@ -427,7 +427,7 @@
       <material name="red"/>
     </collision>
     <inertial>
-      <mass value="0.09" />
+      <mass value="0.2" />
       <inertia ixx="4.690E-05" ixy="-3.095E-06"  ixz="0.00"
                                 iyy="2.886E-05" iyz="0.00"
                                                  izz="6.367E-05" />
@@ -450,7 +450,7 @@
       <material name="white"/>
     </collision>
     <inertial>
-      <mass value="0.085" />
+      <mass value="0.3" />
       <inertia ixx="7.605E-05" ixy="0.00"  ixz="0.00"
                                 iyy="6.090E-05" iyz="1.120E-06"
                                                  izz="2.264E-05" />
@@ -473,7 +473,7 @@
       <material name="blue"/>
     </collision>
     <inertial>
-      <mass value="0.034" />
+      <mass value="0.15" />
       <inertia ixx="3.218E-05" ixy="0.00" ixz="-4.791E-09"
                                iyy="3.195E-05"  iyz="0.00"
                                                izz="1.847E-06" />
@@ -494,7 +494,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.0044" />
+      <mass value="0.15" />
       <inertia ixx="7.04E-7" ixy="0.00" ixz="0.00"
                                  iyy="7.04E-7"  iyz="0.00"
                                                  izz="7.04E-7" />

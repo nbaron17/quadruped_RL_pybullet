@@ -1,3 +1,5 @@
+import sys
+
 import gymnasium as gym
 import numpy as np
 import math
@@ -14,16 +16,23 @@ from ..resources.kinematic_model import robotKinematics
 class DogWalkingEnv(gym.Env):
     metadata = {'render_modes': ['human', 'rgb_array'], "render_fps": 60}
 
-    def __init__(self, render_mode=None, fixed_base=False, start_height=0.2):
+    def __init__(self, render_mode=None, fixed_base=False, start_height=0.2, no_of_actions=12, ext_force_prob=0.0):
         super(DogWalkingEnv, self).__init__()
         self.render_mode = render_mode
-        # action space is 0 to 2.5, here it has been normalised
+        try:
+            self.no_of_actions = no_of_actions
+            if no_of_actions not in [9, 12]:
+                raise ValueError(f"Invalid no_of_actions: must be 9 or 12 but {no_of_actions} was given")
+        except ValueError as e:
+            print(f"Configuration error: {e}")
+            sys.exit()
+
         self.action_space = spaces.Box(
-            low=np.array([-1.0]*12, dtype=np.float32),
-            high=np.array([1.0]*12, dtype=np.float32))
+            low=np.array([-1.0] * self.no_of_actions, dtype=np.float32),
+            high=np.array([1.0] * self.no_of_actions, dtype=np.float32))
         self.observation_space = spaces.Box(
-            low=np.array(37 * [-1], dtype=np.float32),
-            high=np.array(37 * [1], dtype=np.float32))
+            low=np.array(40 * [-10.0], dtype=np.float32),
+            high=np.array(40 * [10.0], dtype=np.float32))
         self.np_random, _ = gym.utils.seeding.np_random()
 
         # self.client = p.connect(p.DIRECT)
@@ -43,7 +52,7 @@ class DogWalkingEnv(gym.Env):
         self.done = False
         self.rendered_img = None
         self.render_rot_matrix = None
-        self.max_steps = 5000
+        self.max_steps = 3000
         self.oris = None
         # self.time_step = p.getPhysicsEngineParameters()['fixedTimeStep']
         self.time_step = 0.01
@@ -87,6 +96,10 @@ class DogWalkingEnv(gym.Env):
         self.action_history = deque(maxlen=self.history_length)
         self.vel_sign_history = deque(maxlen=self.history_length)
 
+        self.prev_joint_angs = None
+
+        self.ext_force_prob = ext_force_prob
+
         self.reset(start_height=start_height)
 
     # def update_action_history(self, action):
@@ -104,7 +117,7 @@ class DogWalkingEnv(gym.Env):
         # print(self.client)
         p.stepSimulation(physicsClientId=self.client)
         ob = self.dog.get_observation(self.plane)
-        self.action_history.append(self.dog.get_norm_joint_angs().copy())
+        self.action_history.append(self.dog.get_joint_angs(normalised=True).copy())
         # self.update_action_history(action)
 
         reward = self.reward_function()
@@ -112,7 +125,8 @@ class DogWalkingEnv(gym.Env):
         self.step_cntr += 1
 
         self.oris = p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.dog.dog, self.client)[1])
-        _ = self.check_if_done()
+        _, reward2 = self.check_if_done()
+        reward += reward2
         # if np.absolute(self.oris[0])>1.6 or np.absolute(self.oris[1])>1.6:
         #     reward -= 1.
         #     self.acc_reward += reward
@@ -120,18 +134,31 @@ class DogWalkingEnv(gym.Env):
         # self.obs_stack.append(ob)
         # flat_obs_stack = np.concatenate(self.obs_stack)
 
+        if np.random.random() < self.ext_force_prob:
+            self.dog.apply_external_force()
+
         return ob, reward, self.done, False, dict()
 
     def check_if_done(self):
-        if self.step_cntr > self.max_steps:  # or np.absolute(self.oris[0]) > 1.6 or np.absolute(self.oris[1]) > 1.6:
+        # done if max steps exceeded or base flips over
+        reward = 0.0
+        if self.step_cntr > self.max_steps:
             self.done = True
-        return self.done
+        elif np.absolute(self.oris[0]) > 1.6 or np.absolute(self.oris[1]) > 1.6:
+            self.done = True
+            reward = -1.0
+        return self.done, reward
 
-    def body_contact_penalty(self):
-        contact_points = p.getContactPoints(self.plane, self.dog.dog, -1, -1)
-        reward = - 0.01 if len(contact_points) > 0 else 0
-        # print('body contact: ', reward)
-        return reward
+    def non_foot_contact_penalty(self):
+        weight = 0.001
+        contact_points = p.getContactPoints(bodyA=self.dog.dog, bodyB=self.plane)
+        if len(contact_points) == 0:
+            return 0.0
+        for contact in contact_points:
+            robot_link_index = contact[3]
+            if robot_link_index in self.dog.non_foot_link_ids:
+                return - 1.0 * weight
+        return 0.0
 
     def tilting_penalty(self):
         # oris = p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.dog.dog, self.client)[1])
@@ -169,10 +196,9 @@ class DogWalkingEnv(gym.Env):
         return reward
 
     def energy_penalty(self):
-        vels, torques = self.dog.get_motor_torques_and_vels()
+        vels = self.dog.get_joint_vels(normalised=False)
         scaler = 0.0005
-        energy =  scaler * -np.absolute(np.dot(vels, torques)) * self.time_step
-        # print('energy: ', energy)
+        energy =  scaler * -np.absolute(np.dot(vels, self.dog.joint_torques)) * self.time_step
         return energy
 
     def vibrating_leg_penalty(self):
@@ -217,24 +243,30 @@ class DogWalkingEnv(gym.Env):
                 if (col[i - 1] == 1 and col[i] == -1) or (col[i - 1] == -1 and col[i] == 1):
                     change_count += 1
             if change_count > 2:
-                return - 0.01
+                return - 0.001
         return 0
+
+    def rapid_action_change_penalty(self):
+        weight = 0.0001
+        joint_angs = self.dog.get_joint_angs(normalised=False)
+        reward = -weight * np.linalg.norm(joint_angs - self.prev_joint_angs)
+        self.prev_joint_angs = joint_angs.copy()
+        return reward
 
 
     def reward_function(self):
         base_state = p.getBasePositionAndOrientation(self.dog.dog, self.client)
 #        reward = np.linalg.norm(np.array(base_state[0][0:2]) - self.prev_pos) 
         reward = base_state[0][0] - self.prev_pos[0] # Reward now the movement along the x-axis
-        # reward += self.drift_penalty(base_state)
+        reward += self.drift_penalty(base_state)
         # reward += self.tilting_penalty()
-        reward += self.body_contact_penalty()
-        # reward += self.energy_penalty()
+        reward += self.non_foot_contact_penalty()
+        reward += self.energy_penalty()
         # reward += self.yaw_penalty()
-        reward += self.vibrating_leg_penalty3()
+        # reward += self.vibrating_leg_penalty3()
+        reward += self.rapid_action_change_penalty()
         self.acc_reward += reward
         self.prev_pos = np.array(p.getBasePositionAndOrientation(self.dog.dog, self.client)[0][0:2]) # x-y base position
-        # if reward == 0.0:
-        #     print(self.client, self.dog.dog, base_state[0][0])
         return reward
 
     def seed(self, seed=None):
@@ -248,7 +280,8 @@ class DogWalkingEnv(gym.Env):
         # Reload the plane and dog
 
         self.plane = p.loadURDF("plane.urdf", physicsClientId=self.client)
-        self.dog = Dog(client=self.client, fixed_base=self.fixed_base, start_height=start_height)
+        self.dog = Dog(client=self.client, fixed_base=self.fixed_base, start_height=start_height, no_of_actions=self.no_of_actions)
+        self.dog.reset_init_joints()
 
         x = (np.random.uniform(5, 9) if np.random.randint(2) else
              np.random.uniform(-5, -9))
@@ -266,6 +299,7 @@ class DogWalkingEnv(gym.Env):
         info = dict()
         self.oris = p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.dog.dog, self.client)[1])
 
+        self.prev_joint_angs = self.dog.get_joint_angs(normalised=False)
 
         return (np.array(ob, dtype=np.float32), info)
 
@@ -327,7 +361,7 @@ class DogWalkingEnv(gym.Env):
         return rgb_array
 
     def get_trot_gait(self):
-        L, angle, Lrot, T = 0.6, 0.0, 0.0, 0.8
+        L, angle, Lrot, T = 1.0, 0.0, 0.0, 0.8
         pos, orn = np.zeros([3]), np.zeros([3])
         bodytoFeet = self.trot.loop(L, angle, Lrot, T, self.offset, self.bodytoFeet0)
         FR_angles, FL_angles, BR_angles, BL_angles, transformedBodytoFeet = self.robotKinematics.solve(orn, pos, bodytoFeet)

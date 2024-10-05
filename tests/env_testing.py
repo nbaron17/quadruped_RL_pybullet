@@ -34,7 +34,7 @@ def test_std_dev_for_trot_gait(env):
         vels, _ = env.dog.get_motor_torques_and_vels()
         concatenated_array = np.hstack((concatenated_array, np.array(vels).reshape(12, 1)))
     env.close()
-    np.save('recorded_actions/trot_vels.npy', concatenated_array)
+    np.save('../recorded_actions/trot_vels.npy', concatenated_array)
 
 def test_trot_gait(env):
     while True:
@@ -79,7 +79,7 @@ def test_motor_torques():
     import pybullet_data
     client = p.connect(p.GUI)
     p.setGravity(0, 0, -9.8)
-    plane = p.loadURDF("dog_walking/resources/simpleplane.urdf", physicsClientId=client)
+    plane = p.loadURDF("../dog_walking/resources/simpleplane.urdf", physicsClientId=client)
     dog = Dog(client=client, fixed_base=True, start_height=0.5)
     time.sleep(1)
     p.changeDynamics(dog.dog, 0, jointDamping=0.1, lateralFriction=0.1)

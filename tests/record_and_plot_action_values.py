@@ -10,7 +10,7 @@ from dog_walking.envs.dog_walking_env import DogWalkingEnv
 import matplotlib.pyplot as plt
 
 MODEL_PATH = "models18/rl_model_58560000_steps.zip"
-ACTIONS_PATH = "recorded_actions"
+ACTIONS_PATH = "../recorded_actions"
 
 
 def record_actions():

@@ -1,28 +1,17 @@
 import gymnasium as gym
-import numpy as np
-from rich.markup import render
 from stable_baselines3 import PPO, SAC
-import dog_walking
 import os
-import sys
-import time
 # import cv2
 import argparse
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3.common.callbacks import CheckpointCallback, CallbackList
-from dog_walking.envs.dog_walking_env import DogWalkingEnv
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.callbacks import ProgressBarCallback
-from tensorboard_callback import TensorboardCallback
-import matplotlib.pyplot as plt
-from gymnasium.wrappers import RecordVideo
+from dog_walking.utils.tensorboard_callback import TensorboardCallback
 
 # Create directories to hold models and logs
-model_dir = "models/models30"
-log_dir = "logs/training_logs/logs30"
+model_dir = "../models/models30"
+log_dir = "../logs/training_logs/logs30"
 os.makedirs(model_dir, exist_ok=True)
 os.makedirs(log_dir, exist_ok=True)
 

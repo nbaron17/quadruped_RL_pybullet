@@ -37,7 +37,7 @@ def run():
     FixedBase = False  # if fixed no plane is imported
     if (FixedBase == False):
         ground = p.loadURDF("plane.urdf")
-    boxId = p.loadURDF("dog_walking/resources/dog.urdf", cubeStartPos, useFixedBase=FixedBase)
+    boxId = p.loadURDF("../dog_walking/resources/dog.urdf", cubeStartPos, useFixedBase=FixedBase)
 
     jointIds = []
     paramIds = []

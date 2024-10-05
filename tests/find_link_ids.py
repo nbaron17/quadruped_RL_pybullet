@@ -6,7 +6,7 @@ p.connect(p.GUI)  # Use p.DIRECT if you don't need visualization
 p.setAdditionalSearchPath(pybullet_data.getDataPath())  # If needed for loading models
 
 # Load your quadruped URDF
-robot_id = p.loadURDF("dog_walking/resources/dog.urdf", [0, 0, 0.5])
+robot_id = p.loadURDF("../dog_walking/resources/dog.urdf", [0, 0, 0.5])
 
 # Get the number of joints (and links)
 num_joints = p.getNumJoints(robot_id)
