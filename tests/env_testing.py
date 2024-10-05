@@ -1,11 +1,9 @@
 import gymnasium as gym
 import numpy as np
 import time
-
-from sympy.stats.sampling.sample_numpy import numpy
-
 from dog_walking.envs.dog_walking_env import DogWalkingEnv
 import numpy as np
+from dog_walking.resources.dog import Dog
 
 
 def test_std_dev_for_leg_vibration(env):
@@ -42,14 +40,12 @@ def test_trot_gait(env):
     while True:
         action = env.get_trot_gait()
         obs, reward, done, _, _ = env.step(action)
-        print(env.vibrating_leg_penalty3())
 
 def test_joint_sampling(env):
     while True:
         action = env.action_space.sample()
         obs, reward, done, _, _ = env.step(action)
-        print(reward)
-
+        time.sleep(0.1)
 
 def test_joint_control(env):
     init_time = time.time()
@@ -71,16 +67,45 @@ def test_joint_limits(env):
             i+=1
             init_time = time.time()
 
-def main():
-    env = gym.make('dogWalkingEnv-v0', render_mode='human', fixed_base=True, start_height=0.5)
-    obs = env.reset(start_height=0.5)[0]
+def test_init_joint_angles(env):
+    obs, reward, done, _, _ = env.step(np.array(12*[0.0]))
+    action = np.array([0.0,0.0,0.0001, 0.0, 0.0 ,0.0 ,0.0, 0.0 ,0.0, 0.0, 0.0, 0.0])
+    while True:
+        obs, reward, done, _, _ = env.step(action)
 
+
+def test_motor_torques():
+    import pybullet as p
+    import pybullet_data
+    client = p.connect(p.GUI)
+    p.setGravity(0, 0, -9.8)
+    plane = p.loadURDF("dog_walking/resources/simpleplane.urdf", physicsClientId=client)
+    dog = Dog(client=client, fixed_base=True, start_height=0.5)
+    time.sleep(1)
+    p.changeDynamics(dog.dog, 0, jointDamping=0.1, lateralFriction=0.1)
+    p.setJointMotorControl2(dog.dog, 0, p.POSITION_CONTROL,
+                            targetPosition = 1.0 , force = 100 , maxVelocity = 100, physicsClientId=client)
+    p.setJointMotorControl2(bodyIndex=dog.dog, jointIndex=1,
+                            controlMode=p.TORQUE_CONTROL,
+                            force=.1, physicsClientId=client)
+    while True:
+        p.stepSimulation()
+
+def get_link_ids(env):
+    env.dog.get_link_names_and_ids()
+
+
+def main():
+    env = gym.make('dogWalkingEnv-v0', render_mode='human', fixed_base=False, start_height=0.2, no_of_actions=12)
+    obs = env.reset(start_height=0.2)[0]
+    # test_motor_torques()
     while True:
         # test_joint_limits(env)
         # test_joint_control(env)
-        # test_joint_sampling(env)
+        test_joint_sampling(env)
         # test_trot_gait(env)
-        test_trot_gait(env)
+        # test_trot_gait(env)
+        # test_init_joint_angles(env)
 
 if __name__=="__main__":
     main()
