@@ -46,6 +46,9 @@ venv.bak/
 logs/
 models/
 
+# Ignore neat algorithm files
+neat_algo/
+
 # TensorBoard log files
 logs/tensorboard/
 
