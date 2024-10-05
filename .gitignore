@@ -49,6 +49,9 @@ models/
 # Ignore neat algorithm files
 neat_algo/
 
+# Ignore recorded actions dir
+recorded_actions/
+
 # TensorBoard log files
 logs/tensorboard/
 
