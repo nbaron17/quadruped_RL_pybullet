@@ -66,7 +66,7 @@ This project provides a custom OpenAI Gym environment for simulating quadrupedal
 
 To train the agent:
 ```bash
-python scripts/train_agent.py --config config/config.yaml
+python scripts/train.py
 ```
 
 ### Evaluation

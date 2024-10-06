@@ -1,0 +1,12 @@
+# Configuration file for training the RL agent
+
+algorithm: 'PPO'  # RL algorithm (PPO, DQN, A2C, etc.)
+total_timesteps: 100000000  # Total number of timesteps for training
+tensorboard_log: './logs/tensorboard/'
+save_freq: 200000  # multiplied by number of envs to get save freq
+eval_freq: 5000
+progress_bar: True
+reset_num_timesteps: False
+num_cpu: 12
+no_of_actions: 12  # set to 9 if you want hip joints to be rigid
+ext_force_prob: 0.0  # Probability of a random force imposed on the body each step
