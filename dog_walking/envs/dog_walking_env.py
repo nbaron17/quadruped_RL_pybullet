@@ -41,9 +41,6 @@ class DogWalkingEnv(gym.Env):
         else:
             self.client = p.connect(p.DIRECT)
 
-
-        # Reduce length of episodes for RL algorithms
-#        p.setTimeStep(1/30, self.client)
         p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=self.client)
 
         self.dog = None
@@ -54,7 +51,6 @@ class DogWalkingEnv(gym.Env):
         self.render_rot_matrix = None
         self.max_steps = 3000
         self.oris = None
-        # self.time_step = p.getPhysicsEngineParameters()['fixedTimeStep']
         self.time_step = 0.01
         p.setTimeStep(self.time_step)
         # self.motor_latency = 10  # 10 time steps = 0.1 seconds delay
@@ -64,8 +60,6 @@ class DogWalkingEnv(gym.Env):
         #     self.command_queue.append(np.array(no_of_actions*[0]))
 
         # Camera parameters
-        # self.camera_width = 320
-        # self.camera_height = 240
         self.camera_width = 1280
         self.camera_height = 720
         self.camera_fov = 60
@@ -78,7 +72,7 @@ class DogWalkingEnv(gym.Env):
         Xdist, Ydist, height = 0.20, 0.15, 0.15
         T = 0.5  # period of time (in seconds) of every step
         self.offset = np.array([0.5, 0., 0., 0.5])  # defines offset between each footstep in this order (FR,FL,BR,BL)
-        self.bodytoFeet0 = np.matrix([[Xdist / 2, -Ydist / 2, -height],
+        self.bodytoFeet0 = np.array([[Xdist / 2, -Ydist / 2, -height],
                                       [Xdist / 2, Ydist / 2, -height],
                                       [-Xdist / 2, -Ydist / 2, -height],
                                       [-Xdist / 2, Ydist / 2, -height]])
@@ -114,18 +108,17 @@ class DogWalkingEnv(gym.Env):
         # self.command_queue.append(action)
         # delayed_action = self.command_queue.popleft()
         self.dog.apply_action(action)
-        # print(self.client)
         p.stepSimulation(physicsClientId=self.client)
         ob = self.dog.get_observation(self.plane)
         self.action_history.append(self.dog.get_joint_angs(normalised=True).copy())
         # self.update_action_history(action)
 
-        reward = self.reward_function()
+        reward = self._reward_function()
         
         self.step_cntr += 1
 
         self.oris = p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.dog.dog, self.client)[1])
-        _, reward2 = self.check_if_done()
+        _, reward2 = self._check_if_done()
         reward += reward2
         # if np.absolute(self.oris[0])>1.6 or np.absolute(self.oris[1])>1.6:
         #     reward -= 1.
@@ -139,7 +132,7 @@ class DogWalkingEnv(gym.Env):
 
         return ob, reward, self.done, False, dict()
 
-    def check_if_done(self):
+    def _check_if_done(self):
         # done if max steps exceeded or base flips over
         reward = 0.0
         if self.step_cntr > self.max_steps:
@@ -149,7 +142,7 @@ class DogWalkingEnv(gym.Env):
             reward = -1.0
         return self.done, reward
 
-    def non_foot_contact_penalty(self):
+    def _non_foot_contact_penalty(self):
         weight = 0.001
         contact_points = p.getContactPoints(bodyA=self.dog.dog, bodyB=self.plane)
         if len(contact_points) == 0:
@@ -160,7 +153,7 @@ class DogWalkingEnv(gym.Env):
                 return - 1.0 * weight
         return 0.0
 
-    def tilting_penalty(self):
+    def _tilting_penalty(self):
         # oris = p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.dog.dog, self.client)[1])
         # max_tilt = max(np.absolute(oris[0]), np.absolute(oris[1]))
         # tilt_th = 0.78  # 45-degree tilt threshold
@@ -177,7 +170,7 @@ class DogWalkingEnv(gym.Env):
         # print('tilt: ', reward)
         return reward
 
-    def yaw_penalty(self):
+    def _yaw_penalty(self):
         # Disincentivise not looking forwards
         oris = p.getEulerFromQuaternion(p.getBasePositionAndOrientation(self.dog.dog, self.client)[1])
         yaw = np.absolute(oris[2])
@@ -190,18 +183,18 @@ class DogWalkingEnv(gym.Env):
             # print('yaw: ', 0)
             return 0
 
-    def drift_penalty(self, base_state):
+    def _drift_penalty(self, base_state):
         reward = -np.absolute(base_state[0][1] - self.prev_pos[1])
         # print('drift: ', reward)
         return reward
 
-    def energy_penalty(self):
+    def _energy_penalty(self):
         vels = self.dog.get_joint_vels(normalised=False)
         scaler = 0.0005
         energy =  scaler * -np.absolute(np.dot(vels, self.dog.joint_torques)) * self.time_step
         return energy
 
-    def vibrating_leg_penalty(self):
+    def _vibrating_leg_penalty(self):
         # for each leg, at least one of the joint has to have moved more than a certain threshold during the recent
         # action history, otherwise a penalty is incurred
         threshold = 0.01
@@ -216,7 +209,7 @@ class DogWalkingEnv(gym.Env):
                 return - 1
         return 0
 
-    def vibrating_leg_penalty_2(self):
+    def _vibrating_leg_penalty_2(self):
         if len(self.action_history) == self.history_length:
             std_dev = np.std(self.action_history, axis=0)
             return std_dev
@@ -232,7 +225,7 @@ class DogWalkingEnv(gym.Env):
             #     std_dev = np.round(std_dev, decimals=4)
             #     reward = -1
 
-    def vibrating_leg_penalty3(self):
+    def _vibrating_leg_penalty3(self):
         # Check if joint velocities have changed direction > twice per half second
         joint_vel_signs = np.array([np.sign(i[1]) for i in p.getJointStates(self.dog.dog, self.dog.joint_ids, physicsClientId=self.client)])
         self.vel_sign_history.append(joint_vel_signs)
@@ -246,7 +239,7 @@ class DogWalkingEnv(gym.Env):
                 return - 0.001
         return 0
 
-    def rapid_action_change_penalty(self):
+    def _rapid_action_change_penalty(self):
         weight = 0.0001
         joint_angs = self.dog.get_joint_angs(normalised=False)
         reward = -weight * np.linalg.norm(joint_angs - self.prev_joint_angs)
@@ -254,17 +247,17 @@ class DogWalkingEnv(gym.Env):
         return reward
 
 
-    def reward_function(self):
+    def _reward_function(self):
         base_state = p.getBasePositionAndOrientation(self.dog.dog, self.client)
 #        reward = np.linalg.norm(np.array(base_state[0][0:2]) - self.prev_pos) 
         reward = base_state[0][0] - self.prev_pos[0] # Reward now the movement along the x-axis
-        reward += self.drift_penalty(base_state)
-        # reward += self.tilting_penalty()
-        reward += self.non_foot_contact_penalty()
-        reward += self.energy_penalty()
-        # reward += self.yaw_penalty()
-        # reward += self.vibrating_leg_penalty3()
-        reward += self.rapid_action_change_penalty()
+        reward += self._drift_penalty(base_state)
+        # reward += self._tilting_penalty()
+        reward += self._non_foot_contact_penalty()
+        reward += self._energy_penalty()
+        # reward += self._yaw_penalty()
+        # reward += self._vibrating_leg_penalty3()
+        reward += self._rapid_action_change_penalty()
         self.acc_reward += reward
         self.prev_pos = np.array(p.getBasePositionAndOrientation(self.dog.dog, self.client)[0][0:2]) # x-y base position
         return reward

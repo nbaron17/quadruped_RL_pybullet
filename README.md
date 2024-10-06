@@ -1,6 +1,7 @@
 # Quadrupedal Locomotion RL Pybullet Environment
 
 A custom OpenAI Gym environment designed for training reinforcement learning agents to perform quadrupedal locomotion tasks.
+
 ![Alt text](videos/rl-video-model29-final2_20241001-230411-episode-0-ezgif.com-video-to-gif-converter.gif)
 
 ---
@@ -74,6 +75,13 @@ python scripts/train.py
 To evaluate a pre-trained agent:
 ```bash
 python scripts/evaluate_agent.py --models/latest_model.zip
+```
+
+### Evaluation
+
+To enjoy a pre-trained agent:
+```bash
+python scripts/enjoy_trained_agent.py --models/latest_model.zip
 ```
 
 ### Visualisation

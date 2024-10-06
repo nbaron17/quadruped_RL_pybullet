@@ -1,17 +1,13 @@
 import pybullet as p
 import os
-import math
 import numpy as np
-import time
 from . import motor_model
-# from kinematic_model import robotKinematics
 
 
 class Dog:
     def __init__(self, client, fixed_base=False, start_height=0.2, no_of_actions=12):
         self.client = client
         robotPos = [0, 0, start_height]
-        robotScale = 1
         self.dog = p.loadURDF(os.path.abspath(os.path.dirname(__file__)) + '/dog.urdf',
                    basePosition=robotPos,
                    baseOrientation=p.getQuaternionFromEuler([0, 0, 0]),
@@ -19,20 +15,13 @@ class Dog:
                    physicsClientId=client)
         self.joint_ids = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
         self.init_joint_angles = np.array(4 * [0.0, 1.0, -1.7])
-        # for i, motor_id in enumerate(self.joint_ids):
-        #     p.resetJointState(self.dog, motor_id, self.init_joint_angles[i])
-        #     p.setJointMotorControl2(bodyIndex=self.dog,
-        #                             jointIndex=motor_id,
-        #                             controlMode=p.VELOCITY_CONTROL,
-        #                             force=0)
 
-            # Create dictionaries for joint and link IDs
+        # Create dictionaries for joint and link IDs
         self.jointNameToID = {}
         self.linkNameToID = {}
         self.revoluteID = []
         for j in range(p.getNumJoints(self.dog)):
             info = p.getJointInfo(self.dog, j)
-            jointID = info[0]
             jointName = info[1].decode('UTF-8')
             jointType = info[2]
             if (jointType == p.JOINT_REVOLUTE):
@@ -48,8 +37,6 @@ class Dog:
 
         self.foot_link_ids = [3, 7, 11, 15]  # FR, FL, BR, BL
         self.non_foot_link_ids = [-1, 0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
-        # self.robotKinematics = robotKinematics()
-        # self.meassure = systemStateEstimator(self.dog) #meassure from simulation
 
         self.set_foot_friction(foot_friction=1)
         self.set_base_friction(base_friction=1)
@@ -59,14 +46,11 @@ class Dog:
 
         self.no_of_actions = no_of_actions
 
-        #robot properties
-        """initial foot position"""
-        #foot separation (Ydist = 0.16 -> tetta=0) and distance to floor
         Xdist = 0.20
         Ydist = 0.15
         height = 0.15
         #body frame to foot frame vector
-        self.bodytoFeet0 = np.matrix([[ Xdist/2 , -Ydist/2 , -height],
+        self.bodytoFeet0 = np.array([[ Xdist/2 , -Ydist/2 , -height],
                                 [ Xdist/2 ,  Ydist/2 , -height],
                                 [-Xdist/2 , -Ydist/2 , -height],
                                 [-Xdist/2 ,  Ydist/2 , -height]])
@@ -78,7 +62,6 @@ class Dog:
 
         self.pos = np.zeros([3])
         self.orn = np.zeros([3])
-        # p.setRealTimeSimulation(1)
         p.setTimeStep(0.002)
 
         self.motor_joints = self.revoluteID
@@ -123,9 +106,6 @@ class Dog:
                                                         force=torque[i],  physicsClientId=self.client)
 
     def apply_action(self, action):
-        # Expects action to be two-dimensional
-        # motor_angles = np.array([3.14 * i for i in action]) # Convert normalised action to motor angles
-
         if self.no_of_actions == 12:
             motor_angles = action
             motor_angles[[0, 3, 6, 9]] *= self.joint_limits[0]
@@ -262,7 +242,6 @@ class Dog:
     def reset_init_joints(self):
         self.init_joint_angles
         for i, joint_index in enumerate(self.joint_ids):
-            # Example: Set each joint to a specific initial position
             p.resetJointState(self.dog, joint_index, self.init_joint_angles[i], targetVelocity=0.0, physicsClientId=self.client)
 
     def apply_external_force(self):
@@ -274,4 +253,3 @@ class Dog:
                              forceObj=force,
                              posObj=[0, 0, 0],
                              flags=p.WORLD_FRAME)
-        # print(force)
